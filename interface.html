@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Chat room</title>
+		
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<!-- My css -->
+		<link rel="stylesheet" type="text/css" href="css/main.css">
+		
+		<!-- Latest compiled and minified JavaScript -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<div class="container">
+			<div class="row">
+				<form class="form-inline">
+					<input type="text" class="username" placeholder="User" disabled>	
+					<div class="username-in-chat"></div>
+				</form>
+				<div class="row">
+					<div class="col-md-4">
+						<input type="text" class="chat-rooms" placeholder="Room names:" disabled>	
+						<div class="chat-room" id="chat-room"></div>	
+
+						<form class="form-inline">
+							<div class="form-group">
+								<input type="text" class="form-control" id="newRoomName" placeholder="New room name">
+								<button type="button" class="btn btn-primary" onclick="addNewRoom()">Create</button>
+								<button type="button" class="btn btn-danger" onclick="dropRoom()">Drop</button>
+							</div>
+						</form>
+
+					</div>
+					<div class="col-md-4">
+						<div class="chat">
+						    <input type="text" class="chat-name" placeholder="System and chat messages:" disabled>
+							<div class="chat-system-messages"></div>
+							<div class="chat-messages"></div>
+							<textarea placeholder="Type your message"></textarea>
+							<div class="chat-status">Status:<span>Idle</span></div>
+						</div>						
+					</div>
+				</div>
+			</div>					
+		</div>
+	</body>
+
+		<script src='http://localhost:8080/socket.io/socket.io.js'></script>
+
+		<script>
+
+			//Global socket
+			try {
+				var socket = io.connect('http://localhost:8080');  
+			}catch(e) {
+				//Set status to warn user
+			}
+
+
+		    //Create new room on the page
+			function addNewRoom(){
+				var getNode = function(s) {
+					return document.querySelector(s);
+				},
+                
+                //Get required nodes 
+				userName = getNode('.username-in-chat');
+
+				if (socket !== undefined) {
+					var room = document.getElementById('newRoomName');
+					socket.emit('addnewRoom', {currRoom: 'Main', username:userName.value, room:room.value});	
+				}				
+			};
+
+			//Send to server change room
+			function switchRoom(room) {
+				var getNode = function(s) {
+					return document.querySelector(s);
+				},
+                
+                //Get required nodes 
+				userName = getNode('.username-in-chat');
+
+				if (socket !== undefined) {
+					socket.emit('switchRoom', {username:userName.value, room:room});
+				}	
+			};
+
+
+			function dropRoom() {
+
+			};
+
+			(function() {
+				var getNode = function(s) {
+					return document.querySelector(s);
+				},
+                
+                //Get required nodes 
+                status = getNode('.chat-status span'),
+                messages = getNode ('.chat-messages'),
+                sysmessages = getNode('.chat-system-messages'),
+				textarea = getNode('.chat textarea'),
+				chatRooms = getNode('.chat-room'),
+				chatName = getNode('.chat-name'),
+				userName = getNode('.username-in-chat');
+
+				statusDefault = status.textContent,
+				setStatus = function (s) {
+					status.textContent = s;
+
+					if(s !== statusDefault) {
+						var delay = setTimeout(function() {
+							setStatus(statusDefault);
+							clearInterval(delay);
+						}, 3000);
+					}
+				};
+
+				if (socket !== undefined) {
+
+					//Listen for a status
+					socket.on('status', function(data) {
+						setStatus((typeof data === 'object') ? data.message : data);
+
+						//clear send message
+						if(data.clear === true) {
+							textarea.value = '';
+						}
+					});				
+
+					//Add user to chat
+			        socket.on('connect', function () {
+			        	var username = prompt("Your name:")
+			        	if(username != null) {
+			        		socket.emit('addUser', username);
+			        		//Return name to page
+			        		var user = document.createElement('div');
+			        		user.setAttribute('class', 'username-in-chat');
+			        		user.textContent = username;
+
+			        		userName.appendChild(user);
+			        		userName.insertBefore(user, userName.firstChild);
+			        	};	
+        			});
+
+	        
+			        //Add new room to page
+			        socket.on('addRoomToPage', function(data) {
+			        	$('#chat-room').append('<div><a href="#"  class="btn-link btn-primary btn-lg" role="button" onclick="switchRoom(\''+ data + '\')">'
+		                     	+ data
+		                     	+ '</a></div>');
+			        });
+
+
+					//Update rooms
+					socket.on('updateRooms', function(rooms, currentRoom) {
+		        		$('#chat-room').empty();
+       					$.each(rooms, function(key, value) {
+       						console.log(value+":"+currentRoom);
+		                	if(value === currentRoom) {
+		                    	$('#chat-room').append('<div><a href="#"  class="btn btn-link btn-default btn-lg disabled" role="button" onclick="switchRoom(\''+ value + '\')">'
+		                     	+ value
+		                     	+ '</a></div>');
+		                    }else{ 	
+		                   		$('#chat-room').append('<div><a href="#"  class="btn btn-link btn-primary btn-lg" role="button" onclick="switchRoom(\''+ value + '\')">'
+		                     	+ value
+		                     	+ '</a></div>');
+		                	}
+		           		});
+					});
+
+
+			        //Get and send messages
+					socket.on('updateChat', function(username, data) {
+						var message = document.createElement('div');
+						if (username == 'System') {
+							message.setAttribute('class','chat-system-message');	
+							message.textContent = username +' wrote: '+ data;
+
+							sysmessages.appendChild(message);
+							sysmessages.insertBefore(message, sysmessages.firstChild);	
+						}else{
+							message.setAttribute('class','chat-message');	
+							message.textContent = username +' wrote: '+ data;
+
+							messages.appendChild(message);
+							messages.insertBefore(message, messages.firstChild);													
+						}
+					});
+
+
+					//Listen for keydown
+					textarea.addEventListener('keydown', function(event) {
+						if(event.which === 13 && event.shiftKey === false) {
+							//Send message to server
+							socket.emit('sendChat', this.value);
+						 	event.preventDefault();
+						 };   
+					});
+
+				}
+			})();
+		</script>
+</html>	

@@ -1,0 +1,95 @@
+body,
+textarea,
+input {
+	font: 13px "Trebuchet MS" sans-serif;
+}
+
+
+.container{
+	margin-top: 2px; 
+}
+
+.row {
+	margin: 1px;
+	padding: 1px;
+	margin-right: 1px;
+    margin-left: 1px;
+}
+
+.label {
+	margin-left: 15px;
+}
+
+.chat-room{ 
+	width: 360px;
+	padding: 10px;	
+}
+
+.chat-rooms{
+	width: 100%;
+	padding: 10px;	
+	margin: 0;
+	margin-bottom: 2px;
+}
+
+.chat {
+	max-width: 300px;
+}
+
+.chat-messages,
+.chat-system-messages,
+.chat textarea,
+.chat-name {
+	border: 1px solid #bbb;
+}
+
+.chat-system-messages {
+	width: 100%;
+	height: 100px;
+	padding: 10px;
+}
+
+
+.chat-messages {
+	width: 100%;
+	height: 300px;
+	overflow-y: scroll;
+	padding: 10px;
+}
+
+.chat-system-message,
+.chat-message {
+	margin-bottom: 10px;
+}
+
+.chat-name { 
+	width: 100%;
+	padding: 10px;	
+	border-bottom: 0;
+	margin: 0;
+}
+
+.chat textarea {
+	width: 100%;
+	padding: 10px;	
+	border-top: 0;
+	margin: 0;
+	max-width: 100%;	
+}
+
+.chat-status {
+	color: #bbb;
+}
+
+.chat textarea,
+.chat-name {
+	outline: none;
+}
+
+
+.nopd {
+	margin: 0;
+	padding: 0;
+	margin-right: 0;
+    margin-left: 0;
+}
