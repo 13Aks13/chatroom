@@ -3,6 +3,6 @@
   "version": "0.0.1",
   "description": "test socket.io app",
   "dependencies": {
-    "socket.io": "^1.7.2"
+    "socket.io": "^1.7.3"
   }
 }
